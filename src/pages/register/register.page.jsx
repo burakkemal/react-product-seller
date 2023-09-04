@@ -98,7 +98,7 @@ const RegisterPage = () => {
             <div className="invalid-feedback">Username is required.</div>
           </div>
           <div className="form-group">
-            <label htmlFor="password">Username:</label>
+            <label htmlFor="password">Password:</label>
             <input
               type="password"
               name="password"
