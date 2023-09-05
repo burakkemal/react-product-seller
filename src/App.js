@@ -8,6 +8,8 @@ import { ProfilePage } from "./pages/profile/profile.page";
 import { AdminPage } from "./pages/admin/admin.page";
 import { NotFoundPage } from "./pages/not-found/not-found.page";
 import { UnAuthorizedPage } from "./pages/unauthorized/unauthorized.page";
+import { AuthGuard } from "./guards/auth.guard";
+import { Role } from "./models/role";
 function App() {
   return (
     <BrowserRouter>
@@ -18,8 +20,24 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin" element={<AdminPage />} />
+
+          <Route
+            path="/profile"
+            element={
+              <AuthGuard roles={[Role.ADMIN, Role.USER]}>
+                <ProfilePage />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <AuthGuard roles={[Role.ADMIN]}>
+                <AdminPage />
+              </AuthGuard>
+            }
+          />
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="/401" element={<UnAuthorizedPage />} />
           <Route path="*" element={<NotFoundPage />} />
