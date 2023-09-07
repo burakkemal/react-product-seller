@@ -1,7 +1,8 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import Product from "../models/product";
 import productService from "../services/product.service";
 import { Modal } from "react-bootstrap";
+import { propTypes } from "react-bootstrap/esm/Image";
 
 const ProductSave = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
@@ -12,6 +13,10 @@ const ProductSave = forwardRef((props, ref) => {
       }, 0);
     },
   }));
+
+  useEffect(() => {
+    setProduct(props.product);
+  }, [props.product]);
 
   const [product, setProduct] = useState(new Product("", "", 0));
   const [errorMessage, seterrorMessage] = useState("");
@@ -25,13 +30,12 @@ const ProductSave = forwardRef((props, ref) => {
     if (!product.name || !product.description || !product.price) {
       return;
     }
-    console.log("burak" + product.name);
-    console.log("burak" + product.description);
-    console.log("burak" + product.price);
     productService
       .saveProduct(product)
       .then((response) => {
-        console.log("burak" + response.data);
+        props.onSaved(response.data);
+        setShow(false);
+        setSubmitted(false);
       })
       .catch((err) => {
         seterrorMessage("Unexpected error saving product");

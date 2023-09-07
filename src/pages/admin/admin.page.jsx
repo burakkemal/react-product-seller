@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import productService from "../../services/product.service";
 import { ProductSave } from "../../components/product-save";
+import Product from "../../models/product";
+import { ProductDelete } from "../../components/product-delete";
 
 const AdminPage = () => {
   const [productList, setProductList] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(
+    new Product("", "", 0)
+  );
+  const [errorMessage, setErrorMessage] = useState("");
 
   const saveComponent = useRef();
+  const deleteComponent = useRef();
 
   useEffect(() => {
     productService
@@ -18,13 +25,56 @@ const AdminPage = () => {
       });
   }, []);
   const createProductRequest = () => {
-    console.log("createProduct");
+    setSelectedProduct(new Product("", "", 0));
     saveComponent.current?.showProductModal();
+  };
+
+  const editProductRequest = (item) => {
+    setSelectedProduct(Object.assign({}, item));
+    saveComponent.current?.showProductModal();
+  };
+
+  const deleteProductRequest = (product) => {
+    console.log("error");
+    setSelectedProduct(product);
+    deleteComponent.current?.showDeleteModal();
+  };
+
+  const saveProductWatcher = (product) => {
+    let itemIndex = productList.findIndex((item) => item.id === product.id);
+
+    if (itemIndex !== -1) {
+      const newList = productList.map((item) => {
+        if (item.id === product.id) {
+          return product;
+        }
+        return item;
+      });
+      setProductList(newList);
+    } else {
+      const newList = productList.concat(product);
+      setProductList(newList);
+    }
+  };
+  const deleteProduct = () => {
+    console.log(selectedProduct);
+    productService
+      .deleteProduct(selectedProduct)
+      .then((_) => {
+        setProductList(productList.filter((x) => x.id !== selectedProduct.id));
+      })
+      .catch((err) => {
+        setErrorMessage("Unexpected error occurred.");
+        console.log(err);
+      });
   };
   return (
     <div>
       <div className="container">
         <div className="pt-5">
+          {errorMessage && (
+            <div className="alert alert-danger">{errorMessage}</div>
+          )}
           <div className="card">
             <div className="header">
               <div className="row">
@@ -60,8 +110,18 @@ const AdminPage = () => {
                       <td>{`$ ${item.price}`}</td>
                       <td>{new Date(item.createTime).toLocaleDateString()}</td>
                       <td>
-                        <button className="btn btn-primary me-1">Edit</button>
-                        <button className="btn btn-danger">Delete</button>
+                        <button
+                          className="btn btn-primary me-1"
+                          onClick={() => editProductRequest(item)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => deleteProductRequest(item)}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -71,7 +131,15 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
-      <ProductSave ref={saveComponent} />
+      <ProductSave
+        ref={saveComponent}
+        onSaved={(p) => saveProductWatcher(p)}
+        product={selectedProduct}
+      />
+      <ProductDelete
+        ref={deleteComponent}
+        onConfirmed={() => deleteProduct()}
+      />
     </div>
   );
 };
